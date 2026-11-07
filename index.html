@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Simulator AES Round 1: Enkripsi dan Dekripsi</title>
+<style>
+:root{--bg:#f6f8fb;--fg:#17212b;--mut:#5b6b7b;--card:#fff;--bd:#c9d3de;--acc:#2563eb;--on:#fde047;--onb:#ca8a04;--glow:rgba(250,204,21,.45);--p:#e8f0fe;--s:#e3f6e6;--k:#fff0d9;--ok:#15803d;--err:#b91c1c;--code:#eef2f7;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1720;--fg:#e6edf3;--mut:#93a4b5;--card:#17212c;--bd:#2f3e4d;--acc:#7aa7ff;--on:#a16207;--onb:#facc15;--glow:rgba(250,204,21,.35);--p:#1c2a44;--s:#173424;--k:#3a2a14;--ok:#4ade80;--err:#f87171;--code:#223040}}
+:root[data-theme="dark"]{--bg:#0f1720;--fg:#e6edf3;--mut:#93a4b5;--card:#17212c;--bd:#2f3e4d;--acc:#7aa7ff;--on:#a16207;--onb:#facc15;--glow:rgba(250,204,21,.35);--p:#1c2a44;--s:#173424;--k:#3a2a14;--ok:#4ade80;--err:#f87171;--code:#223040}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:1150px;margin:0 auto;padding:16px}
+h1{font-size:1.4rem;margin:.2em 0}h2{font-size:1.1rem;margin:0 0 .6em}h3{font-size:1rem;margin:.2em 0}
+.sub{color:var(--mut);margin:0 0 14px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:14px}
+.row{display:flex;flex-wrap:wrap;gap:14px}.row>div{flex:1 1 300px}
+label{display:block;font-weight:600;margin-bottom:4px}
+input,select{width:100%;box-sizing:border-box;padding:9px 10px;font:inherit;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--fg)}
+input{font-family:ui-monospace,Menlo,Consolas,monospace}
+.hint{font-size:.85rem;color:var(--mut);margin-top:4px}.err{color:var(--err)}
+code,.val{font-family:ui-monospace,Menlo,Consolas,monospace}
+code{background:var(--code);padding:1px 5px;border-radius:4px}
+button{font:inherit;padding:9px 14px;border-radius:8px;border:1px solid var(--bd);background:var(--card);color:var(--fg);cursor:pointer}
+button.pri{background:var(--acc);color:var(--bg);border-color:var(--acc);font-weight:600}
+button:disabled{opacity:.45;cursor:default}
+.ctl{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.diag{display:grid;grid-template-columns:170px 1fr 1fr;gap:14px}
+@media(max-width:820px){.diag{grid-template-columns:1fr}}
+.col{display:flex;flex-direction:column;gap:4px;text-align:center}
+.ct{font-size:.85rem;font-weight:700;color:var(--mut)}
+.ar{color:var(--mut);line-height:1}
+.b{border:1.5px solid var(--bd);border-radius:8px;padding:7px 9px;background:var(--card);font-size:.88rem;transition:all .2s}
+.t-p{background:var(--p)}.t-s{background:var(--s)}.t-k{background:var(--k)}
+.b.on{background:var(--on);border-color:var(--onb);box-shadow:0 0 0 4px var(--glow);transform:scale(1.03);font-weight:700}
+.b.off{opacity:.4}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+@media(max-width:900px){.two{grid-template-columns:1fr}}
+.info{background:var(--bg);border:1px solid var(--bd);border-left:4px solid var(--onb);border-radius:8px;padding:10px 12px;min-height:100px}
+.meta{font-size:.82rem;color:var(--mut)}.val{word-break:break-word;line-height:1.7;font-size:.88rem}
+.sc{max-height:230px;overflow:auto;margin-top:4px}
+.vis{border:1px solid var(--bd);border-radius:8px;padding:10px 12px;background:var(--bg);min-height:100px}
+.vh{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.vh button{padding:4px 10px;font-size:.8rem}
+.vrow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center}
+.mat{display:inline-block}.mt{font-size:.72rem;color:var(--mut);text-align:center;margin-bottom:3px}
+.g4{display:grid;grid-template-columns:repeat(4,52px);gap:3px}
+.bc{height:40px;border-radius:5px;border:1px solid var(--bd);background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1}
+.bc b{font:700 .92rem ui-monospace,Menlo,Consolas,monospace}.bc i{font:normal .58rem ui-monospace,Menlo,Consolas,monospace;color:var(--mut)}
+.op{font-size:1.4rem;color:var(--mut)}
+.out{display:flex;flex-wrap:wrap;gap:14px}.out>div{flex:1 1 260px;border:1px solid var(--bd);border-radius:10px;padding:10px;background:var(--bg)}
+.big{font:700 1rem ui-monospace,Menlo,Consolas,monospace;word-break:break-all}.ok{color:var(--ok);font-weight:600}
+.scr{overflow-x:auto;margin-bottom:10px}
+table{border-collapse:collapse;font:.78rem ui-monospace,Menlo,Consolas,monospace}
+th,td{border:1px solid var(--bd);padding:2px 5px;text-align:center}th{background:var(--code)}
+td.sh{background:var(--on);font-weight:700}
+summary{cursor:pointer;font-weight:700}
+.mt2 td{padding:4px 10px;font-size:.9rem}
+</style>
+</head>
+<body>
+<main>
+<h1>Simulator AES Round 1: Enkripsi dan Dekripsi</h1>
+<p class="sub">Soal 1: plaintext → Pre-round transformation → Round 1 (SubBytes, ShiftRows, MixColumns, AddRoundKey), lalu seluruh prosesnya dibalik sampai plaintext kembali.</p>
+
+<section class="card">
+<h2>Input</h2>
+<div class="row">
+<div><label for="st">Plaintext (16 karakter ASCII atau 32 digit hex)</label><input id="st" autocomplete="off" spellcheck="false"><div class="hint" id="pinfo"></div></div>
+<div><label for="key">Cipher key K₀ (32 digit hex)</label><div style="display:flex;gap:6px"><input id="key" autocomplete="off" spellcheck="false" style="flex:1;min-width:0"><button id="rnd" type="button">🎲 Acak</button><button id="dflt" type="button">Default</button></div><div class="hint">K₁ dihitung otomatis lewat key expansion. Klik Acak untuk membuat key baru, Default untuk kembali ke key soal.</div></div>
+
+</div>
+<div class="hint">Byte diisikan ke matriks 4×4 per kolom: 4 byte pertama = kolom 0, dst. Teks diubah ke hex memakai tabel ASCII. Perubahan input langsung dihitung ulang.</div>
+<div class="hint err" id="err"></div>
+</section>
+
+<section class="card">
+<h2>Blok diagram</h2>
+<div class="ctl"><button id="prev">◀ Sebelumnya</button><button id="next" class="pri">Berikutnya ▶</button><button id="reset">Reset</button><button id="dec">Ke fase dekripsi</button><button id="end">Lompat ke hasil</button></div>
+<div class="diag">
+<div class="col"><div class="ct">Round key</div><div class="b t-k" id="kk">Cipher key K₀</div><div class="ar">↓</div><div class="b t-k" id="kx">Key expansion ⇒ K₁</div></div>
+<div class="col" id="ecol"></div>
+<div class="col" id="dcol"></div>
+</div>
+<div class="two">
+<div class="info" id="info"></div>
+<div class="vis"><div class="vh"><b>Animasi matriks (hex dan biner)</b><button id="replay">↻ Ulangi</button></div><div id="vis"></div></div>
+</div>
+</section>
+
+<section class="card">
+<h2>Output</h2>
+<div class="out">
+<div><div class="meta">Plaintext (input)</div><div class="big" id="oin">—</div><div id="oinm"></div></div>
+<div><div class="meta">Output Pre-round</div><div class="big" id="opre">—</div><div id="oprem"></div></div>
+<div><div class="meta">Output Round 1 (ciphertext)</div><div class="big" id="oenc">—</div><div id="oencm"></div></div>
+<div><div class="meta">Plaintext (hasil dekripsi)</div><div class="big" id="odec">—</div><div id="odecm"></div><div id="vf"></div></div>
+</div>
+</section>
+
+<section class="card">
+<h2>Tabel-tabel</h2>
+<details open><summary>Matriks konstanta</summary>
+<div class="row" style="margin-top:10px"><div><h3>MixColumns</h3><div id="tcm"></div></div><div><h3>InvMixColumns</h3><div id="tic"></div></div><div><h3>ShiftRows / InvShiftRows</h3><div class="val">Baris 0: tidak bergeser<br>Baris 1: kiri 1 byte (inv: kanan 1)<br>Baris 2: kiri 2 byte (inv: kanan 2)<br>Baris 3: kiri 3 byte (inv: kanan 3)</div></div></div></details>
+<details open style="margin-top:10px"><summary>S-Box (SubBytes)</summary><div class="scr" style="margin-top:10px" id="tsb"></div></details>
+<details open style="margin-top:10px"><summary>Inverse S-Box (InvSubBytes)</summary><div class="scr" style="margin-top:10px" id="tis"></div>
+<div class="hint">Nibble kiri byte = baris, nibble kanan = kolom. Sel yang dipakai pada langkah SubBytes atau InvSubBytes akan menyala.</div></details>
+<details open style="margin-top:10px"><summary>Tabel ASCII (karakter tercetak)</summary><div class="scr" style="margin-top:10px" id="tas"></div><div class="hint">Baris = nibble kiri, kolom = nibble kanan. Karakter plaintext yang dipakai akan menyala.</div></details>
+</section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const SB=new Array(256),IS=new Array(256);
+(()=>{let p=1,q=1;const rl=(x,n)=>((x<<n)|(x>>(8-n)))&255;do{p=(p^(p<<1)^((p&128)?27:0))&255;q^=q<<1;q&=255;q^=q<<2;q&=255;q^=q<<4;q&=255;if(q&128)q^=9;SB[p]=(q^rl(q,1)^rl(q,2)^rl(q,3)^rl(q,4)^99)&255}while(p!==1);SB[0]=99;SB.forEach((v,i)=>IS[v]=i)})();
+const gm=(a,b)=>{let r=0;while(b){if(b&1)r^=a;a=((a<<1)^((a&128)?27:0))&255;b>>=1}return r};
+const CM=[[2,3,1,1],[1,2,3,1],[1,1,2,3],[3,1,1,2]],IC=[[14,11,13,9],[9,14,11,13],[13,9,14,11],[11,13,9,14]];
+const hx=v=>v.toString(16).toUpperCase().padStart(2,'0');
+const bn=v=>{const s=v.toString(2).padStart(8,'0');return s.slice(0,4)+' '+s.slice(4)};
+const toM=h=>[0,1,2,3].map(r=>[0,1,2,3].map(c=>parseInt(h.substr((c*4+r)*2,2),16)));
+const toH=m=>[0,1,2,3].map(c=>[0,1,2,3].map(r=>hx(m[r][c])).join('')).join('');
+const sub=(m,T)=>m.map(r=>r.map(v=>T[v]));
+const shf=(m,inv)=>m.map((r,i)=>r.map((_,c)=>r[inv?(c-i+4)%4:(c+i)%4]));
+const mix=(m,C)=>[0,1,2,3].map(i=>[0,1,2,3].map(c=>C[i].reduce((a,k,j)=>a^gm(k,m[j][c]),0)));
+const xr=(a,b)=>a.map((r,i)=>r.map((v,c)=>v^b[i][c]));
+const rows=m=>m.map(r=>r.map(hx).join(' ')).join('<br>');
+const c_=s=>`<code>${s}</code>`;
+const DEF={pt:'3696A8AFE87D61A901D91327FC3DAEA5',key:'5564D57B211EB553FFFFDA44CCCF6727'};
+let S=[],idx=0,R=null;
+
+function mixLines(m,C){let o=[];for(let c=0;c<4;c++)for(let r=0;r<4;r++){const t=C[r].map((k,j)=>[hx(k),hx(m[j][c]),hx(gm(k,m[j][c]))]);o.push(`B${r+1}·K${c}: `+t.map(x=>`${x[0]}·${x[1]}=${x[2]}`).join(' ⊕ ')+` = <b>${hx(mix(m,C)[r][c])}</b>`)}return o.join('<br>')}
+function xLines(a,b,r){let o=[];for(let c=0;c<4;c++)o.push(`Kolom ${c}: `+[0,1,2,3].map(i=>`${hx(a[i][c])}⊕${hx(b[i][c])}=<b>${hx(r[i][c])}</b>`).join(' &nbsp; '));return o.join('<br>')}
+const asc=v=>v>=32&&v<127?({60:'&lt;',62:'&gt;',38:'&amp;'}[v]||String.fromCharCode(v)):'·';
+const bytes=h=>h.match(/../g).map(x=>parseInt(x,16));
+const ascS=h=>bytes(h).map(asc).join('');
+function kexp(k){const w=[0,1,2,3].map(i=>k.slice(i*4,i*4+4)),rw=[w[3][1],w[3][2],w[3][3],w[3][0]],sw=rw.map(v=>SB[v]),g=sw.map((v,i)=>i?v:v^1),W=[w[0].map((v,i)=>v^g[i])];for(let j=1;j<4;j++)W.push(w[j].map((v,i)=>v^W[j-1][i]));return{w,rw,sw,g,W}}
+function build(pt,key){
+  const X=kexp(bytes(key)),k1=X.W.flat().map(hx).join(''),K0=toM(key),K1=toM(k1),P=toM(pt),s=[],H=a=>a.map(hx).join(' ');
+  const Q=xr(P,K0),B=sub(Q,SB),Hs=shf(B,false),M=mix(Hs,CM),A=xr(M,K1);
+  s.push({ph:'Kunci',id:'kk',t:'Cipher key K₀ (dipakai pada Pre-round)',v:{k:'show',m:K0,l:'K₀'},h:`K₀ = ${c_(key)}<br>${X.w.map((w,i)=>`w${i} = ${c_(H(w))}`).join('<br>')}`});
+  s.push({ph:'Kunci',id:'kx',t:'Key expansion: K₀ → K₁ (w₄ sampai w₇)',v:{k:'show',m:K1,l:'K₁'},h:`RotWord(w3) = ${c_(H(X.rw))}<br>SubWord = ${c_(H(X.sw))}, ⊕ Rcon(01) → g = ${c_(H(X.g))}<br>w4 = w0⊕g = ${c_(H(X.W[0]))}<br>w5 = w1⊕w4 = ${c_(H(X.W[1]))}<br>w6 = w2⊕w5 = ${c_(H(X.W[2]))}<br>w7 = w3⊕w6 = ${c_(H(X.W[3]))}<br>K₁ = ${c_(k1)}`});
+  s.push({ph:'Enkripsi',id:'ep',t:'Input plaintext (tabel ASCII → hex)',tb:['A',P],v:{k:'show',m:P,l:'Plaintext'},h:`Teks (· = tak tercetak): ${c_(ascS(pt))}<br>Hex: ${c_(pt)}<br>${rows(P)}`});
+  s.push({ph:'Enkripsi',id:'epr',t:'Pre-round transformation: AddRoundKey dengan K₀',v:{k:'xor',a:P,b:K0,r:Q,la:'Plaintext',lb:'K₀',lr:'Pre-round'},h:xLines(P,K0,Q)});const ipre=s.length-1;
+  s.push({ph:'Enkripsi',id:'es',t:'SubBytes (Tabel S-Box)',tb:['S',Q],v:{k:'sub',a:Q,b:B,la:'Sebelum',lb:'Sesudah'},h:'Tiap byte diganti isi S-Box: nibble kiri = baris, kanan = kolom.<br>'+Q.map((r,i)=>r.map((v,j)=>`${hx(v)}→${hx(B[i][j])}`).join(' ')).join('<br>')});
+  s.push({ph:'Enkripsi',id:'eh',t:'ShiftRows',v:{k:'shift',a:B,b:Hs,inv:false,la:'Sebelum',lb:'Sesudah'},h:B.map((r,i)=>`Baris ${i}: ${r.map(hx).join(' ')} → geser kiri ${i} → ${Hs[i].map(hx).join(' ')}`).join('<br>')});
+  s.push({ph:'Enkripsi',id:'em',t:'MixColumns (perkalian matriks konstanta)',v:{k:'mix',a:Hs,b:M,la:'Sebelum',lb:'Sesudah'},h:`<div class="sc">${mixLines(Hs,CM)}</div>`});
+  s.push({ph:'Enkripsi',id:'ek',t:'AddRoundKey (XOR dengan K₁)',v:{k:'xor',a:M,b:K1,r:A,la:'State',lb:'K₁',lr:'Hasil'},h:xLines(M,K1,A)});
+  s.push({ph:'Enkripsi',id:'eo',t:'Output Round 1',v:{k:'show',m:A,l:'Output Round 1'},h:`${c_(toH(A))}<br>${rows(A)}`});const ie=s.length-1;
+  const D1=xr(A,K1),D2=mix(D1,IC),D3=shf(D2,true),D4=sub(D3,IS),D5=xr(D4,K0);
+  s.push({ph:'Dekripsi',id:'di',t:'Input: output Round 1',v:{k:'show',m:A,l:'Output Round 1'},h:`${c_(toH(A))}<br>${rows(A)}`});const idi=s.length-1;
+  s.push({ph:'Dekripsi',id:'dk',t:'InvAddRoundKey (XOR dengan K₁)',v:{k:'xor',a:A,b:K1,r:D1,la:'State',lb:'K₁',lr:'Hasil'},h:xLines(A,K1,D1)});
+  s.push({ph:'Dekripsi',id:'dm',t:'InvMixColumns (matriks konstanta invers)',v:{k:'mix',a:D1,b:D2,la:'Sebelum',lb:'Sesudah'},h:`<div class="sc">${mixLines(D1,IC)}</div>`});
+  s.push({ph:'Dekripsi',id:'dh',t:'InvShiftRows (geser ke kanan)',v:{k:'shift',a:D2,b:D3,inv:true,la:'Sebelum',lb:'Sesudah'},h:D2.map((r,i)=>`Baris ${i}: ${r.map(hx).join(' ')} → geser kanan ${i} → ${D3[i].map(hx).join(' ')}`).join('<br>')});
+  s.push({ph:'Dekripsi',id:'ds',t:'InvSubBytes (Tabel Inverse S-Box)',tb:['I',D3],v:{k:'sub',a:D3,b:D4,la:'Sebelum',lb:'Sesudah'},h:'Tiap byte diganti isi Inverse S-Box.<br>'+D3.map((r,i)=>r.map((v,j)=>`${hx(v)}→${hx(D4[i][j])}`).join(' ')).join('<br>')});
+  s.push({ph:'Dekripsi',id:'dp',t:'Inverse Pre-round: XOR dengan K₀',v:{k:'xor',a:D4,b:K0,r:D5,la:'State',lb:'K₀',lr:'Plaintext'},h:xLines(D4,K0,D5)});
+  s.push({ph:'Dekripsi',id:'do',t:'Output: plaintext hasil dekripsi',tb:['A',D5],v:{k:'show',m:D5,l:'Plaintext'},h:`Hex: ${c_(toH(D5))}<br>Teks (· = tak tercetak): ${c_(ascS(toH(D5)))}<br>${rows(D5)}`});
+  R={pt,pre:Q,enc:A,dec:D5,ip:ipre,ie,idi,id:s.length-1,ok:toH(D5)===pt};
+  return s;
+}
+const RM=matchMedia('(prefers-reduced-motion:reduce)').matches;
+function mat(m,t){const e=document.createElement('div');e.className='mat';e.innerHTML=`<div class="mt">${t||''}</div>`;const g=document.createElement('div');g.className='g4';e.cells=[];m.forEach(r=>r.forEach(v=>{const c=document.createElement('div');c.className='bc';c.innerHTML=`<b>${hx(v)}</b><i>${bn(v)}</i>`;g.append(c);e.cells.push(c)}));e.append(g);return e}
+const fly=(el,f,d)=>{const a=f.getBoundingClientRect(),b=el.getBoundingClientRect();return el.animate([{transform:`translate(${a.left-b.left}px,${a.top-b.top}px) scale(1.2)`,opacity:.35},{transform:'none',opacity:1}],{duration:850,delay:d,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'})};
+const pop=(el,d)=>el.animate([{transform:'scale(.2)',opacity:0},{transform:'scale(1.25)',opacity:1,offset:.6},{transform:'scale(1)',opacity:1}],{duration:520,delay:d,fill:'backwards'});
+const fl=(el,d)=>el.animate([{boxShadow:'0 0 0 0 transparent'},{boxShadow:'0 0 0 4px var(--onb)',offset:.4},{boxShadow:'0 0 0 0 transparent'}],{duration:700,delay:d});
+function drawVis(s){
+  const box=$('vis');box.innerHTML='';const v=s&&s.v;if(!v)return;
+  const w=document.createElement('div');w.className='vrow';const op=t=>{const e=document.createElement('div');e.className='op';e.textContent=t;return e};
+  let go=()=>{};
+  if(v.k==='show'){const M=mat(v.m,v.l);w.append(M);go=()=>M.cells.forEach((c,i)=>pop(c,i*50))}
+  else if(v.k==='sub'){const A=mat(v.a,v.la),B=mat(v.b,v.lb);w.append(A,op('→'),B);go=()=>B.cells.forEach((c,i)=>{fl(A.cells[i],i*60);pop(c,i*60+200)})}
+  else if(v.k==='shift'){const A=mat(v.a,v.la),B=mat(v.b,v.lb);w.append(A,op('→'),B);go=()=>B.cells.forEach((c,i)=>{const r=Math.floor(i/4),q=i%4,src=r*4+(v.inv?(q-r+4)%4:(q+r)%4);fly(c,A.cells[src],i*50);fl(A.cells[src],i*50)})}
+  else if(v.k==='mix'){const A=mat(v.a,v.la),B=mat(v.b,v.lb);w.append(A,op('→'),B);go=()=>B.cells.forEach((c,i)=>{const r=Math.floor(i/4),q=i%4;fl(A.cells[i],q*250);pop(c,q*250+r*60+200)})}
+  else if(v.k==='xor'){const A=mat(v.a,v.la),B=mat(v.b,v.lb),X=mat(v.r,v.lr);w.append(A,op('⊕'),B,op('='),X);go=()=>X.cells.forEach((c,i)=>{fl(A.cells[i],i*60);fl(B.cells[i],i*60);pop(c,i*60+250)})}
+  box.append(w);if(!RM)requestAnimationFrame(go);
+}
+const bx=(id,t,cls)=>`<div class="b ${cls}" id="${id}">${t}</div>`,ar='<div class="ar">↓</div>';
+function init(){
+  $('ecol').innerHTML='<div class="ct">Enkripsi</div>'+[['ep','Plaintext (input)',''],['epr','Pre-round: AddRoundKey K₀','t-k'],['es','SubBytes','t-s'],['eh','ShiftRows','t-p'],['em','MixColumns',''],['ek','AddRoundKey K₁','t-k'],['eo','Output Round 1','']].map(x=>bx(...x)).join(ar);
+  $('dcol').innerHTML='<div class="ct">Dekripsi</div>'+[['di','Output Round 1',''],['dk','InvAddRoundKey K₁','t-k'],['dm','InvMixColumns',''],['dh','InvShiftRows','t-p'],['ds','InvSubBytes','t-s'],['dp','Inv Pre-round: XOR K₀','t-k'],['do','Plaintext (output)','']].map(x=>bx(...x)).join(ar);
+  const mt=m=>`<table class="mt2">${m.map(r=>`<tr>${r.map(v=>`<td>${hx(v)}</td>`).join('')}</tr>`).join('')}</table>`,N=[...Array(16).keys()],X=i=>i.toString(16).toUpperCase();
+  $('tcm').innerHTML=mt(CM);$('tic').innerHTML=mt(IC);
+  const tb=(T,p)=>`<table><tr><th></th>${N.map(i=>`<th>${X(i)}</th>`).join('')}</tr>${N.map(r=>`<tr><th>${X(r)}</th>${N.map(c=>`<td id="${p}${r*16+c}">${hx(T[r*16+c])}</td>`).join('')}</tr>`).join('')}</table>`;
+  $('tsb').innerHTML=tb(SB,'S');$('tis').innerHTML=tb(IS,'I');
+  $('tas').innerHTML=`<table><tr><th></th>${N.map(i=>`<th>${X(i)}</th>`).join('')}</tr>${[2,3,4,5,6,7].map(r=>`<tr><th>${r}</th>${N.map(c=>{const v=r*16+c;return `<td id="A${v}">${v===32?'SP':v===127?'DEL':asc(v)}</td>`}).join('')}</tr>`).join('')}</table>`;
+}
+const mtab=m=>`<table class="mt2" style="margin-top:6px">${m.map(r=>`<tr>${r.map(v=>`<td>${hx(v)}</td>`).join('')}</tr>`).join('')}</table>`;
+function show(){
+  document.querySelectorAll('.b.on').forEach(e=>e.classList.remove('on'));document.querySelectorAll('td.sh').forEach(e=>e.classList.remove('sh'));
+  const s=S[idx];$(s.id).classList.add('on');
+  if(s.tb)s.tb[1].forEach(r=>r.forEach(v=>{const e=$(s.tb[0]+v);e&&e.classList.add('sh')}));
+  $('info').innerHTML=`<div class="meta">Langkah ${idx+1} dari ${S.length} · Fase: <b>${s.ph==='Kunci'?'Persiapan round key':s.ph}</b></div><h3>${s.t}</h3><div class="val">${s.h}</div>`;
+  drawVis(s);
+  const a=idx>=R.ip,b=idx>=R.ie,d=idx>=R.id,tx=h=>`${h}<br><span class="meta">ASCII: ${ascS(h)}</span>`;
+  $('oin').innerHTML=tx(R.pt);$('oinm').innerHTML=mtab(toM(R.pt));
+  $('opre').textContent=a?toH(R.pre):'—';$('oprem').innerHTML=a?mtab(R.pre):'';
+  $('oenc').textContent=b?toH(R.enc):'—';$('oencm').innerHTML=b?mtab(R.enc):'';
+  $('odec').innerHTML=d?tx(toH(R.dec)):'—';$('odecm').innerHTML=d?mtab(R.dec):'';
+  $('vf').innerHTML=d?(R.ok?'<div class="ok">✓ Sama dengan plaintext awal</div>':'<div class="err">✗ Tidak sama</div>'):'';
+  $('prev').disabled=idx===0;$('next').disabled=idx===S.length-1;
+}
+function run(){
+  const raw=$('st').value,h=raw.replace(/\s/g,''),k=$('key').value.replace(/\s/g,''),er=[];let pt=null;
+  if(/^[0-9a-fA-F]{32}$/.test(h))pt=h.toUpperCase();else if(raw.length===16&&[...raw].every(ch=>ch.charCodeAt(0)<256))pt=[...raw].map(ch=>hx(ch.charCodeAt(0))).join('');
+  if(!pt)er.push('Plaintext: isi 16 karakter teks atau 32 digit hex.');
+  if(!/^[0-9a-fA-F]{32}$/.test(k))er.push('Cipher key K₀ harus 32 digit hex.');
+  $('err').textContent=er.join(' ');['prev','next','reset','end','dec'].forEach(i=>$(i).disabled=er.length>0);
+  $('pinfo').innerHTML=pt?`Hex: ${c_(pt)}`:'';
+  if(er.length)return;
+  S=build(pt,k.toUpperCase());idx=0;show();
+}
+$('st').oninput=run;$('key').oninput=run;
+$('rnd').onclick=()=>{const a=new Uint8Array(16);crypto.getRandomValues(a);$('key').value=[...a].map(hx).join('');run()};
+$('dflt').onclick=()=>{$('key').value=DEF.key;run()};
+$('next').onclick=()=>{if(idx<S.length-1){idx++;show()}};$('prev').onclick=()=>{if(idx>0){idx--;show()}};
+$('reset').onclick=()=>{idx=0;show()};$('end').onclick=()=>{idx=S.length-1;show()};$('dec').onclick=()=>{idx=R.idi;show()};$('replay').onclick=()=>drawVis(S[idx]);
+$('st').value=DEF.pt;$('key').value=DEF.key;init();run();
+</script>
+</body>
+</html>
